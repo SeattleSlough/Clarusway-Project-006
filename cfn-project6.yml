@@ -72,8 +72,8 @@ Resources:
         # Staging: false
         # WebACLId: "String"
       Tags:
-        - Key:
-          Value:
+        - Key: Name
+          Value: Static Website CF
 
   StaticWebsiteR53RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
