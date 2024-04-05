@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  Kittens Carousel is a static website application deployed on
+  AWS Simple Storage Service (S3), served through Cloudfront and Route 53
+  using AWS Cloudformation Service.
+
+Parameters:
+
+
+Resources:
+  SourceS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: kittens.infinitelyloopee.com
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Name
+          Value: Static Source Bucket
+      VersioningConfiguration:
+        Status: Enabled
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  SourceS3Policy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SourceS3Bucket # Required
+      PolicyDocument:
+      Version: 2012-10-17
+      Statement:
+        - Action:
+            - 's3:GetObject'
+          Effect: Allow
+          Resource: !Join
+            - ''
+            - - 'arn:aws:s3:::'
+              - !Ref SourceS3Bucket
+              - /*
+          Principal: '*'
+          Sid: PublicReadGetObject
+
+  StaticWebsiteCloudfront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref SourceS3Bucket
+        DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+            ForwardedValues:
+                Cookies:
+                  Forward: none
+                QueryString: true
+            TargetOriginId: KittensOrigin
+            ViewerProtocolPolicy: allow-all
+        DefaultRootObject: index.html
+        Enabled: true
+        # HttpVersion: "String"
+        Origins:
+          - CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+            DomainName: kittens.infinitelyloopee.com.s3-website.us-east-1.amazonaws.com
+            Id: KittensOrigin
+            # ViewerCertificate:
+        # PriceClass: "String"
+        # Staging: false
+        # WebACLId: "String"
+      Tags:
+        - Key:
+          Value:
+
+  StaticWebsiteR53RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneId: Z1020040170C32YLQUTS8
+      RecordSets:
+        -   AliasTarget:
+                DNSName: !GetAtt StaticWebsiteCloudfront.DomainName
+                HostedZoneId: Z2FDTNDATAQYW2
+            Name: !Ref SourceS3Bucket
+            Type: A
+
+# route 53, DNS record, Alias
+
+Outputs:
+  StaticWebsiteURL:
+    Description: The URL for the static website
+    Value: !GetAtt SourceS3Bucket.WebsiteURL
+
+  FQDN:
+    Description: FullyQualifiedDomainName
+    Value: !Ref SourceS3Bucket
