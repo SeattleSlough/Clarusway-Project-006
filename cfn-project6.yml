@@ -4,7 +4,7 @@ Description: |
   AWS Simple Storage Service (S3), served through Cloudfront and Route 53
   using AWS Cloudformation Service.
 
-Parameters:
+# Parameters:
 
 
 Resources:
@@ -30,18 +30,18 @@ Resources:
     Properties:
       Bucket: !Ref SourceS3Bucket # Required
       PolicyDocument:
-      Version: 2012-10-17
-      Statement:
-        - Action:
-            - 's3:GetObject'
-          Effect: Allow
-          Resource: !Join
-            - ''
-            - - 'arn:aws:s3:::'
-              - !Ref SourceS3Bucket
-              - /*
-          Principal: '*'
-          Sid: PublicReadGetObject
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref SourceS3Bucket
+                - /*
+            Principal: '*'
+            Sid: PublicReadGetObject
 
   StaticWebsiteCloudfront:
     Type: AWS::CloudFront::Distribution
@@ -61,16 +61,15 @@ Resources:
             ViewerProtocolPolicy: allow-all
         DefaultRootObject: index.html
         Enabled: true
-        # HttpVersion: "String"
+        HttpVersion: http2
         Origins:
           - CustomOriginConfig:
               OriginProtocolPolicy: http-only
             DomainName: kittens.infinitelyloopee.com.s3-website.us-east-1.amazonaws.com
             Id: KittensOrigin
-            # ViewerCertificate:
-        # PriceClass: "String"
-        # Staging: false
-        # WebACLId: "String"
+        ViewerCertificate:
+          AcmCertificateArn: arn:aws:acm:us-east-1:533266991016:certificate/240c3298-a091-4168-b2eb-63fdc80e362b
+          SslSupportMethod: sni-only
       Tags:
         - Key: Name
           Value: Static Website CF
